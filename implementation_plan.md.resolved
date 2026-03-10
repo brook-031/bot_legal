@@ -1,0 +1,88 @@
+# Professional Legal Management Bot - Discord Structure
+
+This plan outlines the creation of a sophisticated Discord server for a FiveM community, focusing on legal professions (Police, Medical, etc.) with a robust recruitment and ticket system.
+
+## User Review Required
+
+> [!IMPORTANT]
+> Please review the channel structure and role hierarchy below. I will proceed with implementation (creating the bot and the auto-setup script) once you approve this design.
+
+## Proposed Structure
+
+### 1. Global Roles & Permissions
+- 🏛️ **Prefeitura**: Full Administrator access.
+- 👮 **Membro Legal**: Base role to view the administration/archive categories.
+- 🛡️ **Hierarchy Ranks** (Standard for all orgs):
+    - `Comando`, `Sub-Comando`, `Coronel`, `Tenente-Coronel`, `Major`, `1 Tenente`, `2 Tenente`, `Sub Tenente`, `1 Sargento`, `2 Sargento`, `3 Sargente`, `Cabo`, `Soldado`, `Soldado 1 Classe`, `Soldado 2 Classe`, `Recruta`.
+
+---
+
+### 2. Category: 👋 | BEM-VINDOS
+*Accessible to everyone.*
+- `#📩-solicitar-registro`: Contains the bot's `/setcargo` interaction.
+- `#📋-manual-de-conduta`: Read-only information.
+
+### 3. Category: 🎫 | TICKETS
+*Staff only access.*
+- `#🎟️-abrir-ticket`: The target for `/setupticket`.
+- `#📑-log-ticket`: Private channel for ticket transcripts.
+
+### 4. Category: 🏢 | ADMINISTRAÇÃO
+*Visible to anyone with an org role (Membro Legal).*
+- `#📢-comunicados`: Read-only for most.
+- `#⚠️-advertências`: Write: HC only | Read: All members.
+- `#📉-rebaixamentos`: Write: HC only | Read: All members.
+- `#📑-registro-de-oficiais`: Write: HC only | Read: All members.
+- `#✈️-ausência`: Read/Write for all members.
+- `#💡-sugestões`: Read/Write for all members.
+- `#⚖️-código-penal`: Write: HC only | Read: All members.
+
+### 5. Category: 📂 | ARQUIVOS
+*Visible to anyone with an org role.*
+- `#💸-multas`: Read-only (Archived records).
+- `#📦-apreensoes`: Read-only (Archived records).
+- `#📝-registro-de-acao`: All members can read/write.
+
+---
+
+### 6. Job Organizations (C.O.R.E, MILITAR, SPEED, FEDERAL, G.S.A, G.T.M, BOPE)
+*Each organization will have its own category with restricted access to its members.*
+
+**Standard Channels for EACH Org:**
+- `#🤝-contratar`: **PRIVATE** (Visible only to Comando, Sub-Comando, Coronel). This is where registration requests arrive.
+- `#📥-recrutamento`: **PRIVATE** (Visible only to HC).
+- `#🏦-banco-log`: **PRIVATE** (Visible only to HC). News channel for bank logs.
+- `#📢-avisos`: Organization-wide news.
+- `#📜-regras`: Specific internal rules.
+- `#🧬-hierarquia`: Organization rank list.
+- `#💬-bate-papo`: Main chat.
+- `🔊 Ação 1` (Voice)
+- `🔊 Ação 2` (Voice)
+- `🔊 Ação 3` (Voice)
+
+---
+
+## Bot Functionality
+
+### 🚀 Registration System (`/setcargo`)
+1.  **Interaction**: User clicks a button in `#solicitar-registro`.
+2.  **Selection**: A menu appears with org choices (BOPE, CORE, etc.).
+3.  **Modal**: User fills in:
+    - `Nome In-Game`
+    - `ID do Personagem`
+4.  **Notification**: A message with "Approve" / "Reject" buttons is sent to the specific `#🤝-contratar` of that org.
+5.  **Action**: If Approved, the user automatically receives the **Membro Legal** role + the specific **Org Role** + the **Recruta** rank.
+
+### 🎫 Ticket System (`/setupticket`)
+- Creates a persistent button message.
+- Upon clicking, creates a private channel and pings the staff.
+- Includes a "Close" button that saves logs to `#log-ticket`.
+
+## Verification Plan
+
+### Automated Verification
+- I will implement a setup command that creates all these roles and channels automatically to ensure permission consistency across all orgs.
+
+### Manual Verification
+- Testing the modal interaction to ensure notifications go to the correct private channel.
+- Verifying that "Reject" provides feedback and "Approve" grants roles.
