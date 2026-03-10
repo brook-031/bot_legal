@@ -43,9 +43,9 @@ module.exports = async (interaction, client) => {
             const org = ORGS.find(o => o.id === orgId);
 
             if (action === 'approve') {
-                const legalRole = interaction.guild.roles.cache.find(r => r.name === 'Membro Legal');
-                const orgRole = interaction.guild.roles.cache.find(r => r.name === org.name);
-                const recrutaRole = interaction.guild.roles.cache.find(r => r.name === 'Recruta');
+                const legalRole = interaction.guild.roles.cache.find(r => r.name.includes('Membro Legal'));
+                const orgRole = interaction.guild.roles.cache.find(r => r.name.includes(org.name));
+                const recrutaRole = interaction.guild.roles.cache.find(r => r.name.includes('Recruta'));
 
                 if (legalRole) await member.roles.add(legalRole);
                 if (orgRole) await member.roles.add(orgRole);
@@ -71,9 +71,9 @@ module.exports = async (interaction, client) => {
                     return interaction.reply({ content: `Você já possui um ticket aberto: ${existingTicket}`, ephemeral: true });
                 }
 
-                const category = interaction.guild.channels.cache.find(c => c.name === '🎫 | TICKETS' && c.type === 4);
-                const roleSuporte = interaction.guild.roles.cache.find(r => r.name === 'Suporte');
-                const rolePrefeitura = interaction.guild.roles.cache.find(r => r.name === 'Prefeitura');
+                const category = interaction.guild.channels.cache.find(c => c.name.includes('TICKETS') && c.type === 4);
+                const roleSuporte = interaction.guild.roles.cache.find(r => r.name.includes('Suporte'));
+                const rolePrefeitura = interaction.guild.roles.cache.find(r => r.name.includes('Prefeitura'));
 
                 const ticketChannel = await interaction.guild.channels.create({
                     name: channelName,
