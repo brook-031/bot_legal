@@ -44,8 +44,8 @@ module.exports = async (interaction, client) => {
 
             if (action === 'approve') {
                 const legalRole = interaction.guild.roles.cache.find(r => r.name.includes('Membro Legal'));
-                const orgRole = interaction.guild.roles.cache.find(r => r.name.includes(org.name));
-                const recrutaRole = interaction.guild.roles.cache.find(r => r.name.includes('Recruta'));
+                const orgRole = interaction.guild.roles.cache.find(r => r.name.includes(org.name) && !r.name.includes('-'));
+                const recrutaRole = interaction.guild.roles.cache.find(r => r.name.includes('Recruta') && r.name.includes(org.name));
 
                 if (legalRole) await member.roles.add(legalRole);
                 if (orgRole) await member.roles.add(orgRole);
