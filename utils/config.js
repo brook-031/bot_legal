@@ -18,13 +18,69 @@ module.exports = {
         { name: 'Recruta', emoji: '🔰', color: 'Default' }
     ],
     ORGS: [
-        { name: 'C.O.R.E', id: 'core', emoji: '🚓', color: 'Blue' },
-        { name: 'MILITAR', id: 'militar', emoji: '👮', color: 'DarkBlue' },
-        { name: 'SPEED', id: 'speed', emoji: '🏎️', color: 'Red' },
-        { name: 'FEDERAL', id: 'federal', emoji: '⚖️', color: 'Gold' },
-        { name: 'G.S.A', id: 'gsa', emoji: '🛡️', color: 'DarkGreen' },
-        { name: 'G.T.M', id: 'gtm', emoji: '🐕', color: 'Orange' },
-        { name: 'BOPE', id: 'bope', emoji: '💀', color: 'Grey' }
+        {
+            name: 'C.O.R.E',
+            id: 'core',
+            emoji: '🚓',
+            color: 'Blue',
+            roleId: '1480832639882629230',
+            recrutaRoleId: '1480832678671552594',
+            hiringChannelId: '1480832684262690938'
+        },
+        {
+            name: 'MILITAR',
+            id: 'militar',
+            emoji: '👮',
+            color: 'DarkBlue',
+            roleId: '1480832712251146351',
+            recrutaRoleId: '1480832749790167040',
+            hiringChannelId: '1480832756182155298'
+        },
+        {
+            name: 'SPEED',
+            id: 'speed',
+            emoji: '🏎️',
+            color: 'Red',
+            roleId: '1480832780836405279',
+            recrutaRoleId: '1480832824352309269',
+            hiringChannelId: '1480832830706552854'
+        },
+        {
+            name: 'P.R.F',
+            id: 'prf',
+            emoji: '⚖️',
+            color: 'Gold',
+            roleId: '1480832860096168017',
+            recrutaRoleId: '1480832902110642201',
+            hiringChannelId: '1480832907689070685'
+        },
+        {
+            name: 'G.S.A',
+            id: 'gsa',
+            emoji: '🛡️',
+            color: 'DarkGreen',
+            roleId: '1480832938865201193',
+            recrutaRoleId: '1480832976907669507',
+            hiringChannelId: '1480832983224291348'
+        },
+        {
+            name: 'G.T.M',
+            id: 'gtm',
+            emoji: '🐕',
+            color: 'Orange',
+            roleId: '1480833008784379925',
+            recrutaRoleId: '1480833046977581106',
+            hiringChannelId: '1480833052539355199'
+        },
+        {
+            name: 'CIVIL',
+            id: 'civil',
+            emoji: '🕵️',
+            color: 'Grey',
+            roleId: '1480833082180374695',
+            recrutaRoleId: '1480833127076331591',
+            hiringChannelId: '1480833133321392290'
+        }
     ],
     STANDARD_CHANNELS: [
         { name: '🤝-contratar', type: 'text', private: true, hc_only: true },

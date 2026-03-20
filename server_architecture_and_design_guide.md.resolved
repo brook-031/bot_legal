@@ -1,0 +1,69 @@
+# FiveM Server: Architecture & Design Guide
+
+This document summarizes the technical foundation, systems, and design language discovered and implemented during the development of the Police MDT. Use this as a blueprint for creating the EMS / Hospital panel.
+
+## 1. Technical Stack & Framework
+*   **Base Framework**: **Creative v5** (derived from vRP).
+*   **Organization System**: **wnGroupsv2**.
+    *   Management is done via specific SQL tables (`wngroups_setagens`, `wngroups_paineis`).
+    *   Syncs with vRP groups but holds the primary hierarchy in its own tables.
+*   **Inventory System**: Item-based.
+    *   Money is handled as the item `dollars`.
+    *   Illegal items are confiscated via a blacklist in [config.lua](file:///c:/dev/1FIVEM/amPolice/shared/config.lua).
+
+## 2. Database Structure
+### Core Tables
+*   `characters`: (Creative v5) Stores `id`, `age`, `phone`, `fines`, `prison`.
+*   `wngroups_setagens`: Primary source for player-job relationship (Passaporte, Emprego, Cargo, Permissão).
+*   `wngroups_paineis`: Stores the organization's vault balance (`banco`).
+*   `wngroups_banco_extrato`: Financial transaction logs.
+
+### MDT Specific Tables (Custom)
+*   `mdt_historico_criminal`: Logs arrests, fines, and reports.
+*   `mdt_cidadao_desc`: Stores character descriptions and photo URLs (UPSERT strategy).
+*   `mdt_penal_codes`: Dynamic list of infractions and sentences.
+*   `mdt_chat`: Regional organization-specific live chat.
+*   `mdt_announcements`: Management mural/bulletin board.
+
+## 3. Core Logic Patterns
+### "Surgical" Permission Sync
+To prevent bugged chat tabs (common in vRP/FiveM), we use a "Surgical Sync":
+1.  Fetch all current user groups once.
+2.  Compare with the desired target group.
+3.  Remove ONLY conflicting police/org groups.
+4.  Add the new group ONLY if the level/name changed.
+*Result: Minimal events triggered, no duplicated UI tabs.*
+
+### Robust "On Duty" Check
+Instead of hardcoding groups, the system:
+1.  Identifies the user's Department and Rank ID from `wnGroups`.
+2.  Looks up the rank's "Duty Group" in [config.lua](file:///c:/dev/1FIVEM/amPolice/shared/config.lua).
+3.  Verifies if the player actually has that specific group in vRP.
+*If the player is in a "wait" or "off" group, access is denied.*
+
+## 4. UI Design System (Premium Aesthetics)
+To maintain the "Amaze" premium feel:
+*   **Fonts**: `Inter` (UI/Data) and `Outfit` (Headings/Branding).
+*   **Visual Style**: **Glassmorphism**.
+    *   Backgrounds: `rgba(255, 255, 255, 0.7)` with `backdrop-filter: blur(10px)`.
+    *   Borders: Subtle, light outlines (`1px solid rgba(224, 225, 226, 1)`).
+    *   Glows: CSS variable `--primary-glow` used for hover effects and shadow depth.
+*   **Color Palette**:
+    *   Primary: `#3E5F9E` (Deep Blue).
+    *   Success: `#10b981` (Emerald).
+    *   Danger: `#ff4b4b` (Red).
+    *   Warning: `#f59e0b` (Amber).
+*   **Micro-animations**:
+    *   `zoomIn`: For initial panel appearance.
+    *   `translateY(-2px)`: On button hover to give a "clickable" feel.
+    *   `transition: all 0.3s`: Smooth states everywhere.
+
+## 5. Useful Commands & Tools
+*   `/cleargroups`: Emergency cleanup of all police-related permissions.
+*   `actionMDT`: A centralized server-side Hub that handles all NUI requests to avoid event spaghetti.
+*   `debugPrint`: Conditional logging in [config.lua](file:///c:/dev/1FIVEM/amPolice/shared/config.lua).
+
+---
+
+> [!TIP]
+> **EMS Panel Recommendation**: For the EMS version, follow the same "Action Hub" pattern. Instead of `arrests`, implement `medical_records` (historico_medico) and instead of `fines`, implement `treatments` or `consultations`. Reuse the Glassmorphism CSS variables to keep the server's visual identity consistent.

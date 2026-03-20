@@ -44,8 +44,15 @@ module.exports = async (interaction, client) => {
 
             if (action === 'approve') {
                 const legalRole = interaction.guild.roles.cache.find(r => r.name.includes('Membro Legal'));
-                const orgRole = interaction.guild.roles.cache.find(r => r.name.includes(org.name) && !r.name.includes('-'));
-                const recrutaRole = interaction.guild.roles.cache.find(r => r.name.includes('Recruta') && r.name.includes(org.name));
+                
+                // Prioritize IDs from config, fallback to name-based lookup
+                const orgRole = org.roleId 
+                    ? interaction.guild.roles.cache.get(org.roleId)
+                    : interaction.guild.roles.cache.find(r => r.name.includes(org.name) && !r.name.includes('-'));
+                
+                const recrutaRole = org.recrutaRoleId
+                    ? interaction.guild.roles.cache.get(org.recrutaRoleId)
+                    : interaction.guild.roles.cache.find(r => r.name.includes('Recruta') && r.name.includes(org.name));
 
                 if (legalRole) await member.roles.add(legalRole);
                 if (orgRole) await member.roles.add(orgRole);
@@ -125,11 +132,13 @@ module.exports = async (interaction, client) => {
             const name = interaction.fields.getTextInputValue('ingame_name');
             const id = interaction.fields.getTextInputValue('ingame_id');
 
-            // Find the hiring channel for this org (logic to find channel by name or ID stored in DB/JSON)
-            const hiringChannel = interaction.guild.channels.cache.find(c => c.name === `🤝-contratar` && c.parent.name.includes(org.name));
+            // Find the hiring channel for this org
+            const hiringChannel = org.hiringChannelId
+                ? interaction.guild.channels.cache.get(org.hiringChannelId)
+                : interaction.guild.channels.cache.find(c => c.name === `🤝-contratar` && c.parent?.name.includes(org.name));
 
             if (!hiringChannel) {
-                return interaction.reply({ content: 'Erro: Canal de contratação não encontrado.', ephemeral: true });
+                return interaction.reply({ content: 'Erro: Canal de contratação não encontrado. Verifique os IDs no config.js.', ephemeral: true });
             }
 
             const embed = new EmbedBuilder()
