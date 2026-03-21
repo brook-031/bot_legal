@@ -1,10 +1,63 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const { ORGS, RANKS, STANDARD_CHANNELS } = require('../utils/config');
+
+const orgsData = [
+    {
+        name: 'Hospital',
+        emoji: '🏥',
+        color: 'Red',
+        ranks: [
+            { name: 'Diretor', emoji: '👨‍⚕️', isChefe: true },
+            { name: 'Gerente', emoji: '🩺', isGerente: true },
+            { name: 'Paramedico', emoji: '🚑' },
+            { name: 'Estagiario', emoji: '💊' }
+        ]
+    },
+    {
+        name: 'Los Santos',
+        emoji: '🛠️',
+        color: 'Blue',
+        ranks: [
+            { name: 'Chefe LosSantos', emoji: '👨‍🔧', isChefe: true },
+            { name: 'Gerente LosSantos', emoji: '🔧', isGerente: true },
+            { name: 'Mecanico LosSantos', emoji: '🚗' }
+        ]
+    },
+    {
+        name: 'OverSpeed',
+        emoji: '🏁',
+        color: 'Orange',
+        ranks: [
+            { name: 'Chefe OverSpeed', emoji: '👨‍🔧', isChefe: true },
+            { name: 'Gerente OverSpeed', emoji: '🔧', isGerente: true },
+            { name: 'Mecanico OverSpeed', emoji: '🏎️' }
+        ]
+    },
+    {
+        name: 'Cafe',
+        emoji: '☕',
+        color: 'DarkOrange',
+        ranks: [
+            { name: 'Chefe Cafe', emoji: '👨‍🍳', isChefe: true },
+            { name: 'Gerente Cafe', emoji: '📋', isGerente: true },
+            { name: 'Garçom Cafe', emoji: '☕' }
+        ]
+    },
+    {
+        name: 'Pearl',
+        emoji: '🦪',
+        color: 'Gold',
+        ranks: [
+            { name: 'Chefe Pearl', emoji: '👑', isChefe: true },
+            { name: 'Gerente Pearl', emoji: '📋', isGerente: true },
+            { name: 'Garçom Pearl', emoji: '🍽️' }
+        ]
+    }
+];
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('setup-server')
-        .setDescription('Cria toda a estrutura do servidor (Cargos, Categorias e Canais)')
+        .setDescription('Cria toda a estrutura do servidor (Cargos, Categorias e Canais) para Novas Orgs')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     async execute(interaction) {
         await interaction.deferReply();
@@ -19,62 +72,20 @@ module.exports = {
                 return await interaction.guild.roles.create({ name, ...options });
             };
 
-            // 1. Create Global Roles
-            const rolePrefeitura = await createOrUpdateRole('🏛️ Prefeitura', { color: 'Gold', permissions: [PermissionFlagsBits.Administrator] });
-            const roleSuporte = await createOrUpdateRole('🛠️ Suporte', { color: 'Blue' });
-            const roleMembroLegal = await createOrUpdateRole('👮 Membro Legal', { color: 'Greyple' });
-
-            // 2. Create Global Categories
-            const catWelcome = await interaction.guild.channels.cache.find(c => c.name === '👋 | BEM-VINDOS' && c.type === ChannelType.GuildCategory)
-                || await interaction.guild.channels.create({ name: '👋 | BEM-VINDOS', type: ChannelType.GuildCategory });
-
-            const catTickets = await interaction.guild.channels.cache.find(c => c.name === '🎫 | TICKETS' && c.type === ChannelType.GuildCategory)
-                || await interaction.guild.channels.create({ name: '🎫 | TICKETS', type: ChannelType.GuildCategory });
-
-            const catAdmin = await interaction.guild.channels.cache.find(c => c.name === '🏢 | ADMINISTRAÇÃO' && c.type === ChannelType.GuildCategory)
-                || await interaction.guild.channels.create({ name: '🏢 | ADMINISTRAÇÃO', type: ChannelType.GuildCategory, permissionOverwrites: [{ id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] }, { id: roleMembroLegal.id, allow: [PermissionFlagsBits.ViewChannel] }] });
-
-            const catFiles = await interaction.guild.channels.cache.find(c => c.name === '📂 | ARQUIVOS' && c.type === ChannelType.GuildCategory)
-                || await interaction.guild.channels.create({ name: '📂 | ARQUIVOS', type: ChannelType.GuildCategory, permissionOverwrites: [{ id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] }, { id: roleMembroLegal.id, allow: [PermissionFlagsBits.ViewChannel] }] });
-
-            // 3. Create global channels
-            const globalChannels = [
-                { name: '📩-solicitar-registro', parent: catWelcome.id, overwrites: [{ id: interaction.guild.id, deny: [PermissionFlagsBits.SendMessages] }] },
-                { name: '📋-manual-de-conduta', parent: catWelcome.id, overwrites: [{ id: interaction.guild.id, deny: [PermissionFlagsBits.SendMessages] }] },
-                { name: '🎟️-abrir-ticket', parent: catTickets.id },
-                { name: '📑-log-ticket', parent: catTickets.id, overwrites: [{ id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] }, { id: rolePrefeitura.id, allow: [PermissionFlagsBits.ViewChannel] }] }
-            ];
-
-            for (const chan of globalChannels) {
-                if (!interaction.guild.channels.cache.find(c => c.name === chan.name && c.parentId === chan.parent)) {
-                    await interaction.guild.channels.create({ name: chan.name, parent: chan.parent, permissionOverwrites: chan.overwrites || [] });
-                }
-            }
-
-            const adminChannels = ['📢-comunicados', '⚠️-advertências', '📉-rebaixamentos', '📑-registro-de-oficiais', '✈️-ausência', '💡-sugestões', '⚖️-código-penal'];
-            for (const name of adminChannels) {
-                if (!interaction.guild.channels.cache.find(c => c.name === name && c.parentId === catAdmin.id)) {
-                    await interaction.guild.channels.create({ name, parent: catAdmin.id });
-                }
-            }
-
-            const fileChannels = ['💸-multas', '📦-apreensoes', '📝-registro-de-acao'];
-            for (const name of fileChannels) {
-                if (!interaction.guild.channels.cache.find(c => c.name === name && c.parentId === catFiles.id)) {
-                    await interaction.guild.channels.create({ name, parent: catFiles.id });
-                }
-            }
-
-            // 4. Create Org-Specific Roles and Channels
-            for (const org of ORGS) {
+            for (const org of orgsData) {
                 // Main Org Role
                 const orgRole = await createOrUpdateRole(`${org.emoji} ${org.name}`, { color: org.color });
 
                 // Org Hierarchy Roles
-                const orgHierarchy = {};
-                for (const rank of RANKS) {
-                    const rankRoleName = `${rank.emoji} ${rank.name} - ${org.name}`;
-                    orgHierarchy[rank.name] = await createOrUpdateRole(rankRoleName, { color: rank.color });
+                const roleChefeList = [];
+                const roleGerenteList = [];
+
+                for (const rank of org.ranks) {
+                    const rankRoleName = `${rank.emoji} ${rank.name}`;
+                    const createdRole = await createOrUpdateRole(rankRoleName, { color: org.color });
+                    
+                    if (rank.isChefe) roleChefeList.push(createdRole.id);
+                    if (rank.isGerente) roleGerenteList.push(createdRole.id);
                 }
 
                 // Org Category
@@ -89,8 +100,22 @@ module.exports = {
                         ]
                     });
 
-                // Org Channels
-                for (const chan of STANDARD_CHANNELS) {
+                // Channels structure
+                const channels = [
+                    { name: '🔊 Voz 1', type: ChannelType.GuildVoice, config: 'default' },
+                    { name: '🔊 Voz 2', type: ChannelType.GuildVoice, config: 'default' },
+                    { name: '🔊 Voz 3', type: ChannelType.GuildVoice, config: 'default' },
+                    { name: '💬-bate-papo', type: ChannelType.GuildText, config: 'default' },
+                    { name: '📜-regras', type: ChannelType.GuildText, config: 'readonly_edit_high' },
+                    { name: '📢-avisos', type: ChannelType.GuildText, config: 'readonly_edit_high' },
+                    { name: '📦-bau-lider', type: ChannelType.GuildText, config: 'readonly_all' },
+                    { name: '📦-bau', type: ChannelType.GuildText, config: 'readonly_all' },
+                    { name: '🏦-banco', type: ChannelType.GuildText, config: 'readonly_all' },
+                    { name: '📥-recrutamento', type: ChannelType.GuildText, config: 'default' },
+                    { name: '🤝-contratar', type: ChannelType.GuildText, config: 'readonly_edit_high' }
+                ];
+
+                for (const chan of channels) {
                     if (interaction.guild.channels.cache.find(c => c.name === chan.name && c.parentId === catOrg.id)) continue;
 
                     const overwrites = [
@@ -98,24 +123,28 @@ module.exports = {
                         { id: orgRole.id, allow: [PermissionFlagsBits.ViewChannel] }
                     ];
 
-                    if (chan.hc_only) {
-                        // Restricted to Comando, Sub-Comando, Coronel of THIS org
-                        overwrites.push({ id: orgRole.id, deny: [PermissionFlagsBits.ViewChannel] });
-                        overwrites.push({ id: orgHierarchy['Comando'].id, allow: [PermissionFlagsBits.ViewChannel] });
-                        overwrites.push({ id: orgHierarchy['Sub-Comando'].id, allow: [PermissionFlagsBits.ViewChannel] });
-                        overwrites.push({ id: orgHierarchy['Coronel'].id, allow: [PermissionFlagsBits.ViewChannel] });
+                    if (chan.config === 'readonly_edit_high') {
+                        // Everyone can read, nobody can type by default
+                        overwrites.push({ id: orgRole.id, deny: [PermissionFlagsBits.SendMessages] });
+                        
+                        // Chefe/Gerente can type
+                        for (const id of roleChefeList) overwrites.push({ id, allow: [PermissionFlagsBits.SendMessages] });
+                        for (const id of roleGerenteList) overwrites.push({ id, allow: [PermissionFlagsBits.SendMessages] });
+                    } else if (chan.config === 'readonly_all') {
+                        // Everyone can read, nobody can type
+                        overwrites.push({ id: orgRole.id, deny: [PermissionFlagsBits.SendMessages] });
                     }
 
                     await interaction.guild.channels.create({
                         name: chan.name,
-                        type: chan.type === 'voice' ? ChannelType.GuildVoice : ChannelType.GuildText,
+                        type: chan.type,
                         parent: catOrg.id,
                         permissionOverwrites: overwrites
                     });
                 }
             }
 
-            await interaction.editReply('✅ Servidor estruturado com hierarquias isoladas por organização!');
+            await interaction.editReply('✅ Servidor estruturado para as novas organizações (Cargos, Canais e Permissões)!');
         } catch (error) {
             console.error(error);
             await interaction.editReply('❌ Erro no setup. Verifique logs.');

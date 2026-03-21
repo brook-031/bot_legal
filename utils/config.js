@@ -80,6 +80,51 @@ module.exports = {
             roleId: '1480833082180374695',
             recrutaRoleId: '1480833127076331591',
             hiringChannelId: '1480833133321392290'
+        },
+        {
+            name: 'HOSPITAL',
+            id: 'hospital',
+            emoji: '🏥',
+            color: 'Red',
+            roleId: '',
+            recrutaRoleId: '',
+            hiringChannelId: ''
+        },
+        {
+            name: 'LOS SANTOS',
+            id: 'lossantos',
+            emoji: '🛠️',
+            color: 'Blue',
+            roleId: '',
+            recrutaRoleId: '',
+            hiringChannelId: ''
+        },
+        {
+            name: 'OVERSPEED',
+            id: 'overspeed',
+            emoji: '🏁',
+            color: 'Orange',
+            roleId: '',
+            recrutaRoleId: '',
+            hiringChannelId: ''
+        },
+        {
+            name: 'CAFE',
+            id: 'cafe',
+            emoji: '☕',
+            color: 'DarkOrange',
+            roleId: '',
+            recrutaRoleId: '',
+            hiringChannelId: ''
+        },
+        {
+            name: 'PEARL',
+            id: 'pearl',
+            emoji: '🦪',
+            color: 'Gold',
+            roleId: '',
+            recrutaRoleId: '',
+            hiringChannelId: ''
         }
     ],
     STANDARD_CHANNELS: [
