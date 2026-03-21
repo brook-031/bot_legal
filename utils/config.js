@@ -86,45 +86,45 @@ module.exports = {
             id: 'hospital',
             emoji: '🏥',
             color: 'Red',
-            roleId: '',
-            recrutaRoleId: '',
-            hiringChannelId: ''
+            roleId: '1484745023093215344',
+            recrutaRoleId: '1484745027736440953',
+            hiringChannelId: '1484745045566558218'
         },
         {
             name: 'LOS SANTOS',
             id: 'lossantos',
             emoji: '🛠️',
             color: 'Blue',
-            roleId: '',
-            recrutaRoleId: '',
-            hiringChannelId: ''
+            roleId: '1484745046208020562',
+            recrutaRoleId: '1484745049517588550',
+            hiringChannelId: '1484745071914909729'
         },
         {
             name: 'OVERSPEED',
             id: 'overspeed',
             emoji: '🏁',
             color: 'Orange',
-            roleId: '',
-            recrutaRoleId: '',
-            hiringChannelId: ''
+            roleId: '1484745073403887727',
+            recrutaRoleId: '1484745077007057006',
+            hiringChannelId: '1484745094606094506'
         },
         {
             name: 'CAFE',
             id: 'cafe',
             emoji: '☕',
             color: 'DarkOrange',
-            roleId: '',
-            recrutaRoleId: '',
-            hiringChannelId: ''
+            roleId: '1484745095633834175',
+            recrutaRoleId: '1484745105356226600',
+            hiringChannelId: '1484745122624180296'
         },
         {
             name: 'PEARL',
             id: 'pearl',
             emoji: '🦪',
             color: 'Gold',
-            roleId: '',
-            recrutaRoleId: '',
-            hiringChannelId: ''
+            roleId: '1484745124155097138',
+            recrutaRoleId: '1484745127040782463',
+            hiringChannelId: '1484745151321739356'
         }
     ],
     STANDARD_CHANNELS: [
