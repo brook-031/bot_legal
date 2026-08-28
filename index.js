@@ -98,14 +98,21 @@ client.on('guildMemberAdd', async member => {
         const discordId = member.id;
         // 1. Busca o passaporte na tabela accounts
         const [accountRows] = await dbPool.query(
-            "SELECT id, name, name2 FROM accounts WHERE discord = ? OR discord = ? LIMIT 1",
+            "SELECT id FROM accounts WHERE discord = ? OR discord = ? LIMIT 1",
             [discordId, `discord:${discordId}`]
         );
 
         if (!accountRows || accountRows.length === 0) return;
 
         const userId = accountRows[0].id;
-        const playerName = `${accountRows[0].name || ''} ${accountRows[0].name2 || ''}`.trim();
+        let playerName = member.user.username;
+
+        try {
+            const [charRows] = await dbPool.query("SELECT name, name2 FROM characters WHERE id = ? LIMIT 1", [userId]);
+            if (charRows && charRows.length > 0) {
+                playerName = `${charRows[0].name || ''} ${charRows[0].name2 || ''}`.trim();
+            }
+        } catch (e) {}
 
         // 2. Busca setagem na tabela wnGroups_Setagens
         const [setagemRows] = await dbPool.query(
