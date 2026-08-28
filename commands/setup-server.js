@@ -270,11 +270,24 @@ module.exports = {
             const exportConfigPath = path.join(__dirname, '../utils/generated_ids.json');
             fs.writeFileSync(exportConfigPath, JSON.stringify(exportData, null, 2));
 
-            const attachment = new AttachmentBuilder(Buffer.from(JSON.stringify(exportData, null, 2)), { name: 'legal_ids.json' });
+            let envContent = `# === CARGOS GLOBAIS (LEGAL) ===\n`;
+            envContent += `GUILD_ID=${guild.id}\n`;
+            envContent += `ROLE_STAFF_LEGAL_ID=${exportData.globalRoles['Staff'] || ''}\n`;
+            envContent += `ROLE_SUPORTE_LEGAL_ID=${exportData.globalRoles['Suporte'] || ''}\n`;
+            envContent += `ROLE_JUIZ_ID=${exportData.globalRoles['Juiz'] || ''}\n\n`;
+
+            envContent += `# === TAGS BASE DAS ORGANIZAÇÕES LEGAIS (USADO NA BRIDGE FIVEM) ===\n`;
+            for (const org of exportData.orgs) {
+                const cleanKey = org.id.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+                envContent += `ROLE_ORG_${cleanKey}_BASE_ID=${org.roles.base || ''}\n`;
+            }
+
+            const attachmentJson = new AttachmentBuilder(Buffer.from(JSON.stringify(exportData, null, 2)), { name: 'legal_ids.json' });
+            const attachmentEnv = new AttachmentBuilder(Buffer.from(envContent, 'utf8'), { name: 'copiar_para_env_legal.txt' });
 
             await interaction.editReply({
-                content: `✅ **Setup do Servidor Legal concluído com sucesso!**\nTodas as ${LEGAL_ORGS.length} organizações foram criadas com hierarquias, 19 salas padronizadas, isolamento por cargo e painéis de gestão.\n\nOs IDs gerados estão no arquivo em anexo:`,
-                files: [attachment]
+                content: `✅ **Setup do Servidor Legal concluído com sucesso!**\nTodas as ${LEGAL_ORGS.length} organizações foram criadas com hierarquias, 19 salas padronizadas, isolamento por cargo e painéis de gestão.\n\n📄 **Baixe o arquivo \`copiar_para_env_legal.txt\` para colar diretamente no seu \`.env\` do Easypanel:**`,
+                files: [attachmentEnv, attachmentJson]
             });
 
         } catch (error) {
