@@ -175,3 +175,82 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
+
+// ============================================================
+// SERVIDOR HTTP INTERNO PARA SINCRONIZAÇÃO EM TEMPO REAL
+// ============================================================
+const http = require('http');
+
+const syncServer = http.createServer(async (req, res) => {
+    if (req.method === 'POST' && req.url === '/api/bridge/sync-member') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', async () => {
+            try {
+                const data = JSON.parse(body || '{}');
+                const { discordId, playerName, setagens } = data;
+
+                if (!discordId) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    return res.end(JSON.stringify({ error: 'discordId is required' }));
+                }
+
+                console.log(`[Bot Legal] 📥 Sincronização recebida para Discord: ${discordId}`);
+
+                for (const guild of client.guilds.cache.values()) {
+                    const member = await guild.members.fetch(discordId).catch(() => null);
+                    if (!member) continue;
+
+                    if (setagens && Array.isArray(setagens)) {
+                        for (const s of setagens) {
+                            if (s.tipo && s.tipo.toLowerCase() !== 'legal') continue;
+                            const emp = (s.emprego || '').toLowerCase().trim();
+                            const level = parseInt(s.permissao) || 1;
+
+                            // 1. Encontra a organização legal
+                            const org = Object.values(orgsConfig).find(o => o.id === emp || o.name.toLowerCase().includes(emp));
+                            if (!org) continue;
+
+                            // 2. Cargo Base
+                            const baseRole = guild.roles.cache.find(r => r.name.toLowerCase().includes(org.name.toLowerCase()));
+                            if (baseRole) {
+                                await member.roles.add(baseRole.id).catch(() => {});
+                                console.log(`[Bot Legal] ✅ Cargo Base ${baseRole.name} adicionado para ${member.user.tag}`);
+                            }
+
+                            // 3. Cargo Hierárquico
+                            const rankDef = org.ranks.find(r => r.level === level) || org.ranks[0];
+                            const rankRole = guild.roles.cache.find(r => r.name.toLowerCase().includes(rankDef.name.toLowerCase()) && r.name.toLowerCase().includes(org.name.toLowerCase()));
+                            if (rankRole) {
+                                await member.roles.add(rankRole.id).catch(() => {});
+                                console.log(`[Bot Legal] ✅ Cargo Hierarquia ${rankRole.name} adicionado para ${member.user.tag}`);
+                            }
+
+                            // 4. Formata Apelido
+                            const cleanOrgName = org.name.replace(/^(Polícia|Mecânica|Restaurante)\s+/, '');
+                            const finalNick = `[${cleanOrgName} | ${rankDef.name}] ${playerName || member.user.username}`;
+                            await member.setNickname(finalNick.substring(0, 32)).catch(() => {});
+                        }
+                    }
+                }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ ok: true, message: 'Legal sincronizado' }));
+            } catch (err) {
+                console.error('[Bot Legal] Erro no sync HTTP:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+            }
+        });
+    } else {
+        res.writeHead(404);
+        res.end();
+    }
+});
+
+const HTTP_PORT = process.env.HTTP_PORT || 3002;
+syncServer.listen(HTTP_PORT, () => {
+    console.log(`[Bot Legal] Servidor de Sincronização HTTP rodando na porta ${HTTP_PORT}`);
+});
+
+client.login(process.env.DISCORD_TOKEN);
