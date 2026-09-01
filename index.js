@@ -201,13 +201,29 @@ const syncServer = http.createServer(async (req, res) => {
                     const member = await guild.members.fetch(discordId).catch(() => null);
                     if (!member) continue;
 
-                    if (setagens && Array.isArray(setagens)) {
-                        let legalConfig = null;
-                        const genPath = path.join(__dirname, 'utils/generated_ids.json');
-                        if (fs.existsSync(genPath)) {
-                            try { legalConfig = JSON.parse(fs.readFileSync(genPath, 'utf8')); } catch (e) {}
-                        }
+                    let legalConfig = null;
+                    const genPath = path.join(__dirname, 'utils/generated_ids.json');
+                    if (fs.existsSync(genPath)) {
+                        try { legalConfig = JSON.parse(fs.readFileSync(genPath, 'utf8')); } catch (e) {}
+                    }
 
+                    const allManagedRoles = new Set();
+                    if (legalConfig && legalConfig.orgs) {
+                        for (const org of legalConfig.orgs) {
+                            if (org.roles) {
+                                if (org.roles.base) allManagedRoles.add(org.roles.base);
+                                for (let i = 1; i <= 16; i++) {
+                                    if (org.roles[`nivel_${i}`]) allManagedRoles.add(org.roles[`nivel_${i}`]);
+                                }
+                            }
+                        }
+                    }
+
+                    const expectedRoleIds = new Set();
+                    let latestOrgName = '';
+                    let latestRankName = '';
+
+                    if (setagens && Array.isArray(setagens)) {
                         for (const s of setagens) {
                             if (s.tipo && s.tipo.toLowerCase() === 'ilegal') continue;
                             const emp = (s.emprego || '').toLowerCase().trim().replace(/[\s_\-]+/g, '');
@@ -223,26 +239,40 @@ const syncServer = http.createServer(async (req, res) => {
                             }
                             if (!org) continue;
 
-                            // 2. Cargo Base por ID
                             const baseRoleId = org.roles?.base || process.env[`ROLE_ORG_${org.id.toUpperCase()}_BASE_ID`];
-                            if (baseRoleId && guild.roles.cache.has(baseRoleId)) {
-                                await member.roles.add(baseRoleId).catch(err => console.warn(`[Bot Legal] Erro cargo base ${baseRoleId}:`, err.message));
-                                console.log(`[Bot Legal] ✅ [ID: ${baseRoleId}] Cargo Base (${org.name}) adicionado para ${member.user.tag}`);
-                            }
+                            if (baseRoleId) expectedRoleIds.add(baseRoleId);
 
-                            // 3. Cargo Hierárquico por ID
                             const rankRoleId = org.roles?.[`nivel_${level}`] || org.roles?.nivel_1;
-                            if (rankRoleId && guild.roles.cache.has(rankRoleId)) {
-                                await member.roles.add(rankRoleId).catch(err => console.warn(`[Bot Legal] Erro cargo hierarquia ${rankRoleId}:`, err.message));
-                                console.log(`[Bot Legal] ✅ [ID: ${rankRoleId}] Cargo Hierarquia Nível ${level} adicionado para ${member.user.tag}`);
-                            }
+                            if (rankRoleId) expectedRoleIds.add(rankRoleId);
 
-                            // 4. Formata Apelido
                             const rankDef = (org.ranks && org.ranks.find(r => r.level === level)) || (org.ranks && org.ranks[0]) || { name: 'Membro' };
-                            const cleanOrgName = org.name.replace(/^(Polícia|Mecânica|Restaurante)\s+/, '');
-                            const finalNick = `[${cleanOrgName} | ${rankDef.name}] ${playerName || member.user.username}`;
-                            await member.setNickname(finalNick.substring(0, 32)).catch(() => {});
+                            latestOrgName = org.name.replace(/^(Polícia|Mecânica|Restaurante)\s+/, '');
+                            latestRankName = rankDef.name;
                         }
+                    }
+
+                    // 1. Adiciona cargos esperados
+                    for (const roleId of expectedRoleIds) {
+                        if (!member.roles.cache.has(roleId) && guild.roles.cache.has(roleId)) {
+                            await member.roles.add(roleId).catch(err => console.warn(`[Bot Legal] Erro ao adicionar cargo ${roleId}:`, err.message));
+                            console.log(`[Bot Legal] ✅ [ID: ${roleId}] Cargo adicionado para ${member.user.tag}`);
+                        }
+                    }
+
+                    // 2. Remove cargos obsoletos / desetados
+                    for (const roleId of allManagedRoles) {
+                        if (!expectedRoleIds.has(roleId) && member.roles.cache.has(roleId)) {
+                            await member.roles.remove(roleId).catch(err => console.warn(`[Bot Legal] Erro ao remover cargo ${roleId}:`, err.message));
+                            console.log(`[Bot Legal] 🔻 [ID: ${roleId}] Cargo removido de ${member.user.tag} (desetado)`);
+                        }
+                    }
+
+                    // 3. Atualizar Nickname
+                    if (expectedRoleIds.size > 0 && latestOrgName) {
+                        const finalNick = `[${latestOrgName} | ${latestRankName}] ${playerName || member.user.username}`;
+                        await member.setNickname(finalNick.substring(0, 32)).catch(() => {});
+                    } else if (playerName) {
+                        await member.setNickname(playerName.substring(0, 32)).catch(() => {});
                     }
                 }
 
