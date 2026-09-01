@@ -202,31 +202,43 @@ const syncServer = http.createServer(async (req, res) => {
                     if (!member) continue;
 
                     if (setagens && Array.isArray(setagens)) {
+                        let legalConfig = null;
+                        const genPath = path.join(__dirname, 'utils/generated_ids.json');
+                        if (fs.existsSync(genPath)) {
+                            try { legalConfig = JSON.parse(fs.readFileSync(genPath, 'utf8')); } catch (e) {}
+                        }
+
                         for (const s of setagens) {
                             if (s.tipo && s.tipo.toLowerCase() === 'ilegal') continue;
-                            const emp = (s.emprego || '').toLowerCase().trim();
+                            const emp = (s.emprego || '').toLowerCase().trim().replace(/[\s_\-]+/g, '');
                             const level = parseInt(s.permissao) || 1;
 
-                            // 1. Encontra a organização legal
-                            const org = LEGAL_ORGS.find(o => o.id === emp || o.name.toLowerCase().includes(emp) || emp.includes(o.id));
+                            // 1. Busca organização por ID na config
+                            let org = null;
+                            if (legalConfig && legalConfig.orgs) {
+                                org = legalConfig.orgs.find(o => o.id.replace(/[\s_\-]+/g, '') === emp || o.name.toLowerCase().replace(/[\s_\-]+/g, '').includes(emp));
+                            }
+                            if (!org) {
+                                org = LEGAL_ORGS.find(o => o.id.replace(/[\s_\-]+/g, '') === emp || o.name.toLowerCase().replace(/[\s_\-]+/g, '').includes(emp));
+                            }
                             if (!org) continue;
 
-                            // 2. Cargo Base
-                            const baseRole = guild.roles.cache.find(r => r.name.toLowerCase().includes(org.name.toLowerCase()));
-                            if (baseRole) {
-                                await member.roles.add(baseRole.id).catch(() => {});
-                                console.log(`[Bot Legal] ✅ Cargo Base ${baseRole.name} adicionado para ${member.user.tag}`);
+                            // 2. Cargo Base por ID
+                            const baseRoleId = org.roles?.base || process.env[`ROLE_ORG_${org.id.toUpperCase()}_BASE_ID`];
+                            if (baseRoleId && guild.roles.cache.has(baseRoleId)) {
+                                await member.roles.add(baseRoleId).catch(err => console.warn(`[Bot Legal] Erro cargo base ${baseRoleId}:`, err.message));
+                                console.log(`[Bot Legal] ✅ [ID: ${baseRoleId}] Cargo Base (${org.name}) adicionado para ${member.user.tag}`);
                             }
 
-                            // 3. Cargo Hierárquico
-                            const rankDef = (org.ranks && org.ranks.find(r => r.level === level)) || (org.ranks && org.ranks[0]) || { name: 'Membro' };
-                            const rankRole = guild.roles.cache.find(r => r.name.toLowerCase().includes(rankDef.name.toLowerCase()) && r.name.toLowerCase().includes(org.name.toLowerCase()));
-                            if (rankRole) {
-                                await member.roles.add(rankRole.id).catch(() => {});
-                                console.log(`[Bot Legal] ✅ Cargo Hierarquia ${rankRole.name} adicionado para ${member.user.tag}`);
+                            // 3. Cargo Hierárquico por ID
+                            const rankRoleId = org.roles?.[`nivel_${level}`] || org.roles?.nivel_1;
+                            if (rankRoleId && guild.roles.cache.has(rankRoleId)) {
+                                await member.roles.add(rankRoleId).catch(err => console.warn(`[Bot Legal] Erro cargo hierarquia ${rankRoleId}:`, err.message));
+                                console.log(`[Bot Legal] ✅ [ID: ${rankRoleId}] Cargo Hierarquia Nível ${level} adicionado para ${member.user.tag}`);
                             }
 
                             // 4. Formata Apelido
+                            const rankDef = (org.ranks && org.ranks.find(r => r.level === level)) || (org.ranks && org.ranks[0]) || { name: 'Membro' };
                             const cleanOrgName = org.name.replace(/^(Polícia|Mecânica|Restaurante)\s+/, '');
                             const finalNick = `[${cleanOrgName} | ${rankDef.name}] ${playerName || member.user.username}`;
                             await member.setNickname(finalNick.substring(0, 32)).catch(() => {});
