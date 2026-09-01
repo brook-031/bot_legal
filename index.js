@@ -203,12 +203,12 @@ const syncServer = http.createServer(async (req, res) => {
 
                     if (setagens && Array.isArray(setagens)) {
                         for (const s of setagens) {
-                            if (s.tipo && s.tipo.toLowerCase() !== 'legal') continue;
+                            if (s.tipo && s.tipo.toLowerCase() === 'ilegal') continue;
                             const emp = (s.emprego || '').toLowerCase().trim();
                             const level = parseInt(s.permissao) || 1;
 
                             // 1. Encontra a organização legal
-                            const org = Object.values(orgsConfig).find(o => o.id === emp || o.name.toLowerCase().includes(emp));
+                            const org = LEGAL_ORGS.find(o => o.id === emp || o.name.toLowerCase().includes(emp) || emp.includes(o.id));
                             if (!org) continue;
 
                             // 2. Cargo Base
@@ -219,7 +219,7 @@ const syncServer = http.createServer(async (req, res) => {
                             }
 
                             // 3. Cargo Hierárquico
-                            const rankDef = org.ranks.find(r => r.level === level) || org.ranks[0];
+                            const rankDef = (org.ranks && org.ranks.find(r => r.level === level)) || (org.ranks && org.ranks[0]) || { name: 'Membro' };
                             const rankRole = guild.roles.cache.find(r => r.name.toLowerCase().includes(rankDef.name.toLowerCase()) && r.name.toLowerCase().includes(org.name.toLowerCase()));
                             if (rankRole) {
                                 await member.roles.add(rankRole.id).catch(() => {});
